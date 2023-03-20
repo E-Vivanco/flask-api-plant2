@@ -1,9 +1,12 @@
 import os
 from flask_cors import CORS
 from flask import Flask,render_template,json, jsonify,request
+#import mysql.connector
+#import requests
 from flask_migrate import Migrate
 from dotenv import load_dotenv
-from models import db, User,Character,Planet
+from models import db,User,Character,Planet,Vehicle,Favorito
+
 
 load_dotenv()
 
@@ -13,9 +16,8 @@ app.config['DEBUG']=True
 app.config['ENV']='development'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 app.config['SECRET_KEY'] ="cualquier_palabra"
-#app.config['SQLALCHEMY_DATABASE_URI']=os.getenv('DATABASE_URI')
-app.config['SQLALCHEMY_DATABASE_URI']="sqlite:///basedatosflask2.db"
-
+app.config['SQLALCHEMY_DATABASE_URI']=os.getenv('DATABASE_URI')
+#CORS(app)
 
 # rrl de starw urlSW
 db.init_app(app)
@@ -26,7 +28,7 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 def home():
     return render_template('index.html')
 
-# User routes
+## User routes
 @app.route('/api/users', methods=['GET'])
 def get_users():
 
@@ -102,7 +104,6 @@ def create_character():
     character.save()
 
     return jsonify(character.serialize()), 201
-
 @app.route('/api/characters/<int:id>', methods=['PATCH'])
 def update_character(id):
     # UPDATE user SET name="" WHERE id = ?
@@ -122,7 +123,7 @@ def update_character(id):
     
     
     return jsonify(character.serialize()), 202
-
+    
 @app.route('/api/characters/<int:id>', methods=['DELETE'])
 def delete_character(id):
     # SELECT * FROM users WHERE id = ?
@@ -132,9 +133,10 @@ def delete_character(id):
     character.delete()
 
     return jsonify({ "message": "Character Deleted" }), 202
+    
 
 @app.route('/api/planets', methods=['GET'])
-def get_planets():
+def get_planet():
 
     planets = Planet.query.all()
     planets = list(map(lambda planet: planet.serialize(), planets))
@@ -143,7 +145,6 @@ def get_planets():
 
 @app.route('/api/planets', methods=['POST'])
 def create_planet():
-    # INSERT INTO users() VALUES ()
 
     datos = request.get_json()
     planet = Planet()
@@ -152,8 +153,7 @@ def create_planet():
     planet.terrain = datos['terrain']
     planet.gravity = datos['gravity']
     planet.diameter = datos['diameter']
-    planet.save() # ejecuta add + commit
-
+    planet.save()
 
     return jsonify(planet.serialize()), 201
 
@@ -169,7 +169,6 @@ def update_planet(id):
 
     # SELECT * FROM users WHERE id #
     planet = Planet.query.get(id)
-    planet.name = name
     planet.climate = climate
     planet.terrain = terrain
     planet.gravity = gravity
@@ -178,10 +177,123 @@ def update_planet(id):
     
     
     return jsonify(planet.serialize()), 202
+    
+@app.route('/api/planets/<int:id>', methods=['DELETE'])
+def delete_planet(id):
+    # SELECT * FROM users WHERE id = ?
+    planet = Planet.query.get(id)
+
+    # DELETE FROM users WHERE id=?
+    planet.delete()
+
+    return jsonify({ "message": "Character Deleted" }), 202
+
+    
+@app.route('/api/vehicles', methods=['GET'])
+def get_vehicle():
+
+    vehicles = Vehicle.query.all()
+    vehicles = list(map(lambda vehicle: vehicle.serialize(), vehicles))
+
+    return jsonify(vehicles), 200
+
+@app.route('/api/vehicles', methods=['POST'])
+def create_vehicle():
+
+    datos = request.get_json()
+    vehicle = Vehicle()
+    vehicle.name = datos['name']
+    vehicle.model = datos['model']
+    vehicle.manufacturer = datos['manufacturer']
+    vehicle.vehicleclass = datos['vehicleclass']
+    vehicle.passerger = datos['passerger']
+    vehicle.save()
+
+    return jsonify(vehicle.serialize()), 201
+
+@app.route('/api/vehicles/<int:id>', methods=['PATCH'])
+def update_vehicle(id):
+    # UPDATE user SET name="" WHERE id = ?
+    
+    name = request.json.get('name') # None
+    model = request.json.get('model') # None
+    manufacturer =  request.json.get('manufacturer') # None
+    vehicleclass =  request.json.get('vehicleclass') # None
+    passerger =  request.json.get('passerger') # None
+
+    # SELECT * FROM users WHERE id #
+    vehicle = Vehicle.query.get(id)
+    vehicle.model = model
+    vehicle.manufacturer = manufacturer
+    vehicle.vehicleclass = vehicleclass
+    vehicle.passerger = passerger
+    vehicle.update()
+    
+    
+    return jsonify(vehicle.serialize()), 202
+    
+@app.route('/api/vehicles/<int:id>', methods=['DELETE'])
+def delete_vehicle(id):
+    # SELECT * FROM users WHERE id = ?
+    vehicle = Vehicle.query.get(id)
+
+    # DELETE FROM users WHERE id=?
+    vehicle.delete()
+
+    return jsonify({ "message": "Character Deleted" }), 202
+
+@app.route('/api/favoritos', methods=['GET'])
+def get_favoritos():
+
+    favoritos = Favorito.query.all()
+    favoritos = list(map(lambda favorito: favorito.serialize(), favoritos))
+    return jsonify(favoritos), 200
+
+@app.route('/api/favoritos', methods=['POST'])
+def create_favorito():
+
+    datos = request.get_json()
+    favorito = Favorito()
+    favorito.user_id = datos['user_id']
+    favorito.character_id = datos['character_id']
+    favorito.planet_id = datos['planet_id']
+    favorito.vehicle_id = datos['vehicle_id']
+    favorito.save()
+
+    return jsonify(favorito.serialize()), 201
+
+
+@app.route('/api/favoritos/<int:id>', methods=['PATCH'])
+def update_favorito(id):
+    
+    user_id = request.json.get('user_id')
+    character_id = request.json.get('character_id')
+    planet_id = request.json.get('planet_id')
+    vehicle_id = request.json.get('vehicle_id')
+
+
+    favorito = Favorito.query.get(id)
+    favorito.user_id = user_id
+    favorito.character_id = character_id
+    favorito.planet_id = planet_id
+    favorito.vehicle_id = vehicle_id
+    favorito.update()
+
+    return jsonify(favorito.serialize()), 200
+
+@app.route('/api/favoritos/<int:id>', methods=['DELETE'])
+def delete_favorito(id):
+
+    favorito = Favorito.query.get(id)
+    favorito.delete()
+
+    return jsonify({ "message": "Favorite Deleted" }), 200
+
+
 
 with app.app_context():
     db.create_all()
-
+    
 
 if __name__ == '__main__':
     app.run()
