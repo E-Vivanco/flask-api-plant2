@@ -3,6 +3,8 @@ from flask_cors import CORS
 from flask import Flask,render_template,json, jsonify,request
 #import mysql.connector
 #import requests
+#from utils import APIException, generate_sitemap
+#from admin import setup_admin
 from flask_migrate import Migrate
 from dotenv import load_dotenv
 from models import db,User,Character,Planet,Vehicle,Favorito
@@ -23,6 +25,7 @@ app.config['SQLALCHEMY_DATABASE_URI']=os.getenv('DATABASE_URI')
 db.init_app(app)
 Migrate(app,db) # db init, db migrate, db upgrade
 CORS(app, resources={r"/api/*": {"origins": "*"}})
+#setup_admin(app)
 
 @app.route("/")
 def home():
